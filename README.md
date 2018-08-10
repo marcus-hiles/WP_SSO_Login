@@ -1,2 +1,2 @@
-# WP_SSO_Login
+# WP SSO Login
 Enable SSO Login 
