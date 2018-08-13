@@ -1,7 +1,6 @@
 <?php
 
-
-namespace WP_SSO;
+namespace WP_IMIS_SSO;
 
 class WordPress {
   
