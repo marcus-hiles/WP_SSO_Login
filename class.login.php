@@ -9,7 +9,6 @@ class WP_IMIS_SSO {
 	public  $chapter;
 	public  $wordpress;
 
-
 	function __construct( ) {
 		 $this->user = new WP_IMIS_SSO\User;
 		 $this->imis = new WP_IMIS_SSO\IMIS;
@@ -19,10 +18,12 @@ class WP_IMIS_SSO {
 
 
 	public static function get_instance() {
+
 		 if ( ! isset( self::$instance ) ) {
 			 self::$instance = new WP_IMIS_SSO();
 			 self::$instance->add_hooks();
 		 }
+		 
 		 return self::$instance;
 	}
 
@@ -68,16 +69,13 @@ class WP_IMIS_SSO {
 			if ( is_wp_error( $user ) ){
 				return $user;
 			}
-
-			$wpuser = new WP_User( $user->ID );
 			
-			if( $wpuser->exists() && $wpuser->has_cap( 'administrator' ) ) {
+			if( $user->exists() && $user->has_cap( 'administrator' ) ) {
 				return $user;
 			}
 
 			return new WP_Error( 'failed', 'Sorry, you must be a site administrator to use this feature' );
 		}
-
 
 		/*
 		* Fetch the IMIS ID from the login credentials
@@ -90,7 +88,6 @@ class WP_IMIS_SSO {
 			return new WP_Error('failed', $e->getMessage() . ' (Error 100) ' );
 		}
 
-		
 		/*
 		* Fetch the IMIS Data from the ID
 		*/
@@ -107,17 +104,14 @@ class WP_IMIS_SSO {
 			return new WP_Error('failed', $e->getMessage() );
 		}
 
-
 		$wpUser = new WP_User(  $this->wordpress->getUserID( $this->user->getUserInfo('email') ) );
-
 
 		/*
 		* Update user meta if last update is different
 		*/
-		 if($this->wordpress->check_if_should_update_info( $wpUser->ID, $userData ) ){
+		if($this->wordpress->check_if_should_update_info( $wpUser->ID, $userData ) ){
 		 	$this->wordpress->update_existing_user_data( $wpUser->ID, $this->user->getUserInfo(), $this->chapter );
-		 }
-
+		}
 
 		/*
 		* Create new user if one does not already exist
@@ -187,9 +181,12 @@ class WP_IMIS_SSO {
 		* If there is no 'Login' cookie, and user is logged into WP, sign them out
 		*/
 		if( ! $login_cookie ) {
+
 			if( $is_logged_in ){				
 				$this->wordpress->logout_wp();
 			}
+
+			return;
 		}
 
 		/*
@@ -199,14 +196,16 @@ class WP_IMIS_SSO {
 
 			/*
 			* get logged in user from IMIS via cookie
-			* returns the email address
+			* returns the imis username
 			*/
 			$loggedinUser = $this->imis->getLoggedinUserRise( 
 				array( new WP_Http_Cookie( array( 'name' => 'Login', 'value' => $login_cookie ) ) ) 
 			);
 
+			/*
+			* Try to setup WP_User object based on imis username
+			*/
 			$wpUser = new WP_User( $this->wordpress->getUserID( $loggedinUser ) );
-
 
 			/*
 			* They are logged into IMIS, but not a WP user yet. Disregard until they try to login
@@ -214,7 +213,16 @@ class WP_IMIS_SSO {
 			if( ! $wpUser || ! $wpUser->exists() ){
 				return;
 			}
-			
+
+			/*
+			* The IMIS user does not match the logged in user.
+			*/
+			$logged_in_as = new WP_User ( get_current_user_id() );
+
+			if( $wpUser->ID != $logged_in_as->ID ) {
+				$this->wordpress->logout_wp();
+			}
+
 			/*
 			* Setup the user info from IMIS
 			* First, looks for transient from recent login
@@ -234,7 +242,6 @@ class WP_IMIS_SSO {
 				return new WP_Error('failed', $e->getMessage() );
 			}
 	
-
 			/*
 			* Update user meta if last update is different
 			*/
