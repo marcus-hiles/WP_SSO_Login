@@ -3,7 +3,6 @@
 class WP_IMIS_SSO {
 
 	private static $instance;
-
 	public  $user;
 	public  $imis;
 	public  $chapter;
