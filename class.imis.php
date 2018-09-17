@@ -2,6 +2,4 @@
 
 namespace WP_IMIS_SSO;
 
-class IMIS {
-  
-}
+class IMIS {}
