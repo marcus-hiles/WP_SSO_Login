@@ -73,7 +73,7 @@ class WP_IMIS_SSO {
 				return $user;
 			}
 
-			return new WP_Error( 'failed', 'Sorry, you must be a site administrator to use this feature' );
+			return new WP_Error( 'failed', 'Sorry, you must be a site administrator to use this feature.' );
 		}
 
 		/*
